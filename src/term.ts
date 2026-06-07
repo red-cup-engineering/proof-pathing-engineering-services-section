@@ -27,25 +27,38 @@ const canonical = (value: unknown): unknown => {
 export const termKey = (term: Term): string =>
   typeof term === "string" ? term : JSON.stringify(canonical(term));
 
+const ESC = "~";
 const SAFE = /[A-Za-z0-9._-]/;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-/** Escape a string to a traversal-safe path segment: SAFE bytes pass; every other byte becomes `~HH`. */
+const escapeByte = (byte: number): string => ESC + byte.toString(16).padStart(2, "0");
+
+/** Escape a string to a traversal-safe path segment: SAFE bytes pass; every other byte becomes `~HH`.
+ * Empty, ".", "..", and leading "." are escaped so arbitrary term parts cannot escape or hide inside a
+ * POSIX coordinate. */
 export function sanitizeSegment(value: string): string {
+  if (value === "") return `${ESC}e`;
+  if (value === ".") return `${ESC}2e`;
+  if (value === "..") return `${ESC}2e${ESC}2e`;
   let out = "";
+  let first = true;
   for (const ch of value) {
-    if (SAFE.test(ch)) out += ch;
-    else for (const b of encoder.encode(ch)) out += "~" + b.toString(16).toUpperCase().padStart(2, "0");
+    if (ch === ESC) out += escapeByte(ch.charCodeAt(0));
+    else if (first && ch === ".") out += escapeByte(ch.charCodeAt(0));
+    else if (ch.length === 1 && ch.charCodeAt(0) < 128 && SAFE.test(ch)) out += ch;
+    else for (const b of encoder.encode(ch)) out += escapeByte(b);
+    first = false;
   }
   return out;
 }
 
 /** The inverse of `sanitizeSegment`: decode `~HH` escapes back to the original string. */
 export function desanitizeSegment(segmentText: string): string {
+  if (segmentText === `${ESC}e`) return "";
   const bytes: number[] = [];
   for (let i = 0; i < segmentText.length; ) {
-    if (segmentText[i] === "~") {
+    if (segmentText[i] === ESC) {
       bytes.push(parseInt(segmentText.slice(i + 1, i + 3), 16));
       i += 3;
     } else {

@@ -1,8 +1,27 @@
 // proof-pathing.test.ts — behavioral proof that a path is a proof. Run: node --test (Node ≥ 22.18).
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { join } from "node:path";
 
-import { structureOf, prove, walk, proves, cellOf, MORPHISM_KEYS } from "./index.ts";
+import {
+  address,
+  addressNested,
+  composeTerm,
+  decomposeTerm,
+  desanitizeSegment,
+  logPath,
+  MORPHISM_KEYS,
+  namespaceOf,
+  prove,
+  proves,
+  sanitizeSegment,
+  structureOf,
+  termOf,
+  termOfNested,
+  walk,
+  withinNamespace,
+  cellOf,
+} from "./index.ts";
 
 // ── specialization: the is-a /library/ type-path (the grow.mjs spine) ───────────
 
@@ -77,6 +96,69 @@ test("same structure yields the same path — the term is its own collision-free
   assert.equal(prove(structureOf(cells), "paracosm", "room").path, prove(structureOf(cells), "paracosm", "room").path);
 });
 
-test("the four generator slots are the canonical predicate-category classes", () => {
+test("the generator slots are the canonical predicate-category classes", () => {
   assert.deepEqual([...MORPHISM_KEYS], ["specialization", "converse", "subject-projection", "object-projection"]);
+});
+
+// ── typed term coordinates: absorbed from typed-filepath addressing ───────────
+
+test("address resolves a term to a typed coordinate and termOf recovers the term", () => {
+  const root = "/tmp/tfas";
+
+  assert.equal(address(root, "people/morgan", "jsonl"), join(root, "people", "morgan", "morgan.jsonl"));
+  assert.equal(address(root, ["a", "b"], "json"), join(root, "a", "b", "b.json"));
+  assert.equal(address(root, "x", ".md"), address(root, "x", "md"));
+  assert.equal(logPath(root, "people/morgan"), address(root, "people/morgan", "jsonl"));
+  assert.equal(termOf(root, address(root, "creatures/ada", "jsonl")), "creatures/ada");
+  assert.throws(() => address(root, "", "jsonl"), /empty term/);
+  assert.throws(() => address(root, "x", ""), /needs a type/);
+});
+
+test("segment hygiene is reversible, traversal-safe, and collision-resistant for hostile parts", () => {
+  const inputs = [
+    "", ".", "..", "...", ".hidden", "plain", "Morgan O'Toole",
+    "a/b/c", "../../etc/passwd", "with space", "tab\tand\nnewline",
+    "cafe", "cafe\u0301", "emoji-🜂", "~tilde", "~7e", "weird~e",
+    "https://example.com/path?q=1&x=2#frag",
+  ];
+
+  for (const input of inputs) {
+    const atom = sanitizeSegment(input);
+    assert.ok(atom.length > 0);
+    assert.ok(!atom.includes("/"));
+    assert.notEqual(atom, ".");
+    assert.notEqual(atom, "..");
+    assert.ok(!atom.startsWith("."));
+    assert.match(atom, /^[A-Za-z0-9._~-]+$/);
+    assert.equal(desanitizeSegment(atom), input);
+  }
+  assert.equal(new Set(inputs.map(sanitizeSegment)).size, inputs.length);
+});
+
+test("addressNested treats each arbitrary part as one reversible coordinate segment", () => {
+  const root = "/tmp/tfas-hygiene";
+  const boss = "Morgan O'Toole / boss";
+
+  assert.equal(addressNested(root, ["people", "ada"], "jsonl"), join(root, "people", "ada", "ada.jsonl"));
+  assert.equal(addressNested(root, boss, "jsonl"), join(root, sanitizeSegment(boss), `${sanitizeSegment(boss)}.jsonl`));
+
+  const traversal = addressNested(root, ["a", "../../etc/passwd", "b"], "jsonl");
+  assert.ok(traversal.startsWith(join(root, "a")));
+  assert.ok(!traversal.includes("/.."));
+  assert.deepEqual(termOfNested(root, traversal), ["a", "../../etc/passwd", "b"]);
+
+  const parts = ["people", "Morgan O'Toole", "cafe\u0301"];
+  assert.deepEqual(termOfNested(root, addressNested(root, parts, "jsonl")), parts);
+  assert.notEqual(addressNested(root, ["a/b"], "jsonl"), addressNested(root, ["a", "b"], "jsonl"));
+});
+
+test("composeTerm creates reversible namespaced term coordinates", () => {
+  const term = composeTerm("agents", ["Ada Lovelace", "msg/42"]);
+
+  assert.equal(term, `agents/${sanitizeSegment("Ada Lovelace")}/${sanitizeSegment("msg/42")}`);
+  assert.deepEqual(decomposeTerm(term), { namespace: "agents", parts: ["Ada Lovelace", "msg/42"] });
+  assert.equal(namespaceOf(term), "agents");
+  assert.equal(withinNamespace(term, "agents"), true);
+  assert.equal(withinNamespace(term, "claims"), false);
+  assert.deepEqual(decomposeTerm(""), { namespace: "", parts: [] });
 });

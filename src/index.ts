@@ -22,6 +22,20 @@ export { ascend } from "./ascend.ts";
 export type { ParsedPath } from "./path.ts";
 export { render, parsePath, targetKeyOf } from "./path.ts";
 
+// typed term coordinates
+export type { AddressTerm } from "./address.ts";
+export {
+  address,
+  logPath,
+  termOf,
+  addressNested,
+  termOfNested,
+  composeTerm,
+  decomposeTerm,
+  namespaceOf,
+  withinNamespace,
+} from "./address.ts";
+
 // proof construction
 export type { Proof, WalkResult } from "./prove.ts";
 export { closure, proves, routeOf, prove, walk } from "./prove.ts";
