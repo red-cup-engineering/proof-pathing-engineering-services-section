@@ -21,8 +21,8 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@561-group/meme": "workspace:*",
-    "@561-group/memetic-processing-unit": "workspace:*"
+    "@561-group/meme": "0.0.1",
+    "@561-group/memetic-processing-unit": "0.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

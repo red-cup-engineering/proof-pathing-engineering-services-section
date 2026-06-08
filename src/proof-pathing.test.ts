@@ -11,6 +11,7 @@ import {
   desanitizeSegment,
   logPath,
   MORPHISM_KEYS,
+  pathOf,
   namespaceOf,
   prove,
   proves,
@@ -98,6 +99,30 @@ test("same structure yields the same path — the term is its own collision-free
 
 test("the generator slots are the canonical predicate-category classes", () => {
   assert.deepEqual([...MORPHISM_KEYS], ["specialization", "converse", "subject-projection", "object-projection"]);
+});
+
+test("pathOf folds math-style morphism-slot structures directly to a typed proof path", () => {
+  const structure = {
+    objects: ["being", "mortal", "human", "socrates", "plato"],
+    specialization: [
+      { domain: "being", codomain: "mortal" },
+      { domain: "mortal", codomain: "human" },
+      { domain: "human", codomain: "socrates" },
+    ],
+    converse: [],
+    "subject-projection": [],
+    "object-projection": [{ domain: "socrates", codomain: "plato" }],
+  };
+
+  assert.equal(
+    pathOf(structure, "being", "socrates"),
+    "being/specialization/library/mortal/specialization/library/human/specialization/library/socrates",
+  );
+  assert.equal(
+    pathOf(structure, "being", "plato"),
+    "being/specialization/library/mortal/specialization/library/human/specialization/library/socrates/object-projection/library/plato",
+  );
+  assert.equal(pathOf(structure, "human", "being"), null);
 });
 
 // ── typed term coordinates: absorbed from typed-filepath addressing ───────────

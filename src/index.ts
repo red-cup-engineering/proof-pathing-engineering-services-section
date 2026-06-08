@@ -14,6 +14,8 @@ export { termKey, segment, sanitizeSegment, desanitizeSegment, cellOf } from "./
 // the predicate category: generators + the structure builder
 export type { Generator, Atom, Step, Route, StructureOptions } from "./category.ts";
 export { MORPHISM_KEYS, structureOf } from "./category.ts";
+export type { MorphismEdge, MorphismSlotStructure } from "./structure-path.ts";
+export { atomsOfStructure, pathOf, pathOfStructure } from "./structure-path.ts";
 
 // the least-fixed-point ascent
 export { ascend } from "./ascend.ts";
