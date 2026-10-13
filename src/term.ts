@@ -3,7 +3,8 @@
 // (a compound term, the node a converse/projection edge points at). `termKey` is the canonical equality
 // key (so equal terms address together regardless of identity — Yoneda). `segment` renders a term to ONE
 // traversal-safe POSIX path segment via the repo's `~HH` byte-escape (SAFE = [A-Za-z0-9._-]); same scheme
-// as the fs store, so a proof-path is a real, deterministic, collision-free address.
+// as the fs store. V1 term keys can alias a string with a structured value;
+// witness replay rejects a structure containing such ambiguous typed keys.
 import type { Cell } from "@561-group/meme";
 
 /** A term: any value that can be a node in the category (an entity, a predicate, or a whole cell). */
