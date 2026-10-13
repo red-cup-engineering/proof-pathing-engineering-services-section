@@ -38,7 +38,8 @@ export interface StructureOptions {
   readonly specializationPredicate?: Term;
 }
 
-const atomKey = (a: Atom): string => `${termKey(a.subject)}|${a.predicate}|${termKey(a.object)}`;
+// Tuple encoding is injective across delimiter-bearing term keys; concatenation was not.
+const atomKey = (a: Atom): string => JSON.stringify([termKey(a.subject), a.predicate, termKey(a.object)]);
 
 /** structureOf(cells) — fold a knowledge base of cells into the predicate category's atomic generator
  * edges. A specialization cell `(instance, is-a, type)` contributes the type→instance edge (the spine of
