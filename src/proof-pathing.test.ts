@@ -92,6 +92,22 @@ test("walk rejects a path whose hops are not real generator edges", () => {
   assert.equal(walk(atoms, "paracosm/specialization/library/room").ok, true);
 });
 
+test("walk cannot forge a generator edge by injecting separator characters into term keys", () => {
+  const atoms = [{ subject: "a|converse|b", predicate: "converse" as const, object: "c" }];
+  const forged = `a/converse/library/${sanitizeSegment("b|converse|c")}`;
+  const genuine = `${sanitizeSegment("a|converse|b")}/converse/library/c`;
+  assert.equal(walk(atoms, forged).ok, false, "delimiter collision is not an admitted generator");
+  assert.equal(walk(atoms, genuine).ok, true, "the actual edge remains usable");
+});
+
+test("walk rejects noncanonical alternate spellings of the same proof path", () => {
+  const atoms = structureOf([{ subject: "room", predicate: "is-a", object: "paracosm" }]);
+  assert.equal(walk(atoms, "paracosm/specialization/library/room").ok, true);
+  assert.equal(walk(atoms, "~70aracosm/specialization/library/room").ok, false);
+  assert.equal(walk(atoms, "paracosm/specialization/library/roo~6d").ok, false);
+  assert.equal(walk(atoms, "paracosm/specialization/library/roo~GG").ok, false);
+});
+
 test("same structure yields the same path — the term is its own collision-free index", () => {
   const cells = [{ subject: "room", predicate: "is-a", object: "paracosm" }];
   assert.equal(prove(structureOf(cells), "paracosm", "room").path, prove(structureOf(cells), "paracosm", "room").path);
