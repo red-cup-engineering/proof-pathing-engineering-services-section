@@ -8,7 +8,7 @@ import { saturate, type PathEdge, type PathPotential } from "@561-group/memetic-
 import { ascend } from "./ascend.ts";
 import { type Atom, type Generator, type Route, type Step } from "./category.ts";
 import { type Term, termKey } from "./term.ts";
-import { render, parsePath } from "./path.ts";
+import { render } from "./path.ts";
 
 // ── the path-composition monad's least fixed point ──────────────────────────────────────────────────
 
@@ -95,26 +95,6 @@ export function prove(atoms: readonly Atom[], root: Term, target: Term): Proof {
   return { ok: true, route, generators: route.steps.map((s) => s.kind), path: render(route) };
 }
 
-/** The result of checking a rendered path against a structure. */
-export interface WalkResult {
-  readonly ok: boolean;
-  readonly reason?: string;
-}
-
-/** walk(atoms, path) — re-check that a rendered path is a real proof: every hop must be an atomic
- * generator edge of the structure (the Curry-Howard proof term is checkable). */
-export function walk(atoms: readonly Atom[], path: string): WalkResult {
-  const parsed = parsePath(path);
-  if (!parsed) return { ok: false, reason: "malformed proof path" };
-  // Compare structural tuples: user-controlled term keys can contain pipe delimiters.
-  const edgeTuple = (source: string, kind: Generator, target: string): string =>
-    JSON.stringify([source, kind, target]);
-  const edges = new Set(atoms.map((a) => edgeTuple(termKey(a.subject), a.predicate, termKey(a.object))));
-  let currentKey = parsed.rootKey;
-  for (const step of parsed.steps) {
-    const key = edgeTuple(currentKey, step.kind, step.nodeKey);
-    if (!edges.has(key)) return { ok: false, reason: `no ${step.kind} edge from ${currentKey} to ${step.nodeKey}` };
-    currentKey = step.nodeKey;
-  }
-  return { ok: true };
-}
+// Backward-compatible public entrypoint; verification is independent of path generation.
+export { walk } from "./walk.ts";
+export type { WalkResult } from "./walk.ts";
