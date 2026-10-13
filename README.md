@@ -1,5 +1,7 @@
 # @561-group/proof-pathing
 
+**Verification boundary (2026-10-12):** A successfully walked path is a proof of *reachability in the supplied generator graph*. It is **not**, by itself, a Lean-kernel proof that an arbitrary proposition is true, a certificate that a generator is a bilattice homomorphism, or a license for a SignCraft inference. Those stronger claims require an explicit interpretation of each generator and a theorem preserving the relevant judgment. The independent receiver is `src/walk.ts`; it does not import the closure solver. Canonical paths and unambiguous generator-edge keys prevent distinct structural witnesses from sharing a spelling.
+
 The **Meme-structure → typed-path** fold, read through **Curry-Howard-Lambek**. A path is a **proof**:
 the composite of predicate-category generator morphisms from a foundational root to a target. Rendered to
 a typed POSIX path, the term is its own collision-free index (Yoneda), and walking the path re-checks the
