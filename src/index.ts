@@ -1,6 +1,7 @@
 // index.ts — proof-pathing: the Meme-structure → typed-path fold, read through Curry-Howard-Lambek.
 //
-// A path is a PROOF. `structureOf` folds a knowledge base of cells into the predicate category's atomic
+// A path witnesses reachability in a supplied generator graph, NOT an arbitrary theorem.
+// `structureOf` folds a knowledge base of cells into the predicate category's atomic
 // generator edges (specialization, converse, subject-/object-projection). `prove` composes them — the LFP
 // of the path-composition monad (`saturate`/μ, reused from the MPU) is the proof's existence (Lambek's
 // initial algebra), a witnessing BFS route its concrete terms — and `render`s the route to a typed POSIX
