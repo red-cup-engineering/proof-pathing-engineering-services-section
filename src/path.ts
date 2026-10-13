@@ -1,7 +1,8 @@
 // path.ts — render a witnessed route to a typed POSIX path, and parse one back. The format is the mm /
 // grow.mjs convention: `root/<generator>/library/<term>/<generator>/library/<term>/…`. Each `/library/`
 // segment is the term a generator lands on; the bare generator segment names the morphism taken. The whole
-// string is a checkable Curry-Howard proof term: walking it re-derives the route (foundation → target).
+// string witnesses checkable graph reachability (foundation → target). A proof of a further
+// proposition requires a separate sound interpretation of the generator edges.
 import { type Term, segment, sanitizeSegment, desanitizeSegment } from "./term.ts";
 import { type Generator, type Route, MORPHISM_KEYS } from "./category.ts";
 
