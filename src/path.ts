@@ -2,7 +2,7 @@
 // grow.mjs convention: `root/<generator>/library/<term>/<generator>/library/<term>/…`. Each `/library/`
 // segment is the term a generator lands on; the bare generator segment names the morphism taken. The whole
 // string is a checkable Curry-Howard proof term: walking it re-derives the route (foundation → target).
-import { type Term, segment, desanitizeSegment } from "./term.ts";
+import { type Term, segment, sanitizeSegment, desanitizeSegment } from "./term.ts";
 import { type Generator, type Route, MORPHISM_KEYS } from "./category.ts";
 
 const isGenerator = (value: string): value is Generator => (MORPHISM_KEYS as readonly string[]).includes(value);
@@ -25,14 +25,22 @@ export interface ParsedPath {
 export function parsePath(path: string): ParsedPath | null {
   const parts = path.split("/");
   if (parts.length === 0 || parts[0] === undefined || parts[0] === "") return null;
-  const rootKey = desanitizeSegment(parts[0]);
+  // Require the unique canonical path spelling; otherwise one term can have many witness addresses.
+  const decodeCanonical = (part: string): string | null => {
+    const decoded = desanitizeSegment(part);
+    return sanitizeSegment(decoded) === part ? decoded : null;
+  };
+  const rootKey = decodeCanonical(parts[0]);
+  if (rootKey === null) return null;
   const steps: { kind: Generator; nodeKey: string }[] = [];
   for (let i = 1; i < parts.length; i += 3) {
     const kind = parts[i];
     const library = parts[i + 1];
     const node = parts[i + 2];
     if (kind === undefined || node === undefined || library !== "library" || !isGenerator(kind)) return null;
-    steps.push({ kind, nodeKey: desanitizeSegment(node) });
+    const nodeKey = decodeCanonical(node);
+    if (nodeKey === null) return null;
+    steps.push({ kind, nodeKey });
   }
   return { rootKey, steps };
 }
