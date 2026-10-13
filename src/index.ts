@@ -6,7 +6,8 @@
 // of the path-composition monad (`saturate`/μ, reused from the MPU) is the proof's existence (Lambek's
 // initial algebra), a witnessing BFS route its concrete terms — and `render`s the route to a typed POSIX
 // path `root/<generator>/library/<term>/…`. The generator sequence IS the proof term; the path is its own
-// collision-free index (Yoneda); `walk` re-checks it. The only data dependency is `@561-group/meme`.
+// deterministic index for an unambiguous presentation; `walk` checks structural
+// reachability rather than theoremhood. The only data dependency is `@561-group/meme`.
 
 // terms + segment encoding
 export type { Term, Cell } from "./term.ts";
