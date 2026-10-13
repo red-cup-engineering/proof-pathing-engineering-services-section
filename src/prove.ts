@@ -13,7 +13,7 @@ import { render, parsePath } from "./path.ts";
 // ── the path-composition monad's least fixed point ──────────────────────────────────────────────────
 
 const labelKey = (predicate: unknown): string => (Array.isArray(predicate) ? predicate.map(String).join(",") : String(predicate));
-const edgeKey = (edge: PathEdge): string => `${termKey(edge.subject)}|${labelKey(edge.predicate)}|${termKey(edge.object)}`;
+const edgeKey = (edge: PathEdge): string => JSON.stringify([termKey(edge.subject), labelKey(edge.predicate), termKey(edge.object)]);
 
 const dedupe = (edges: readonly PathEdge[]): PathEdge[] => {
   const seen = new Set<string>();
@@ -106,10 +106,13 @@ export interface WalkResult {
 export function walk(atoms: readonly Atom[], path: string): WalkResult {
   const parsed = parsePath(path);
   if (!parsed) return { ok: false, reason: "malformed proof path" };
-  const edges = new Set(atoms.map((a) => `${termKey(a.subject)}|${a.predicate}|${termKey(a.object)}`));
+  // Compare structural tuples: user-controlled term keys can contain pipe delimiters.
+  const edgeTuple = (source: string, kind: Generator, target: string): string =>
+    JSON.stringify([source, kind, target]);
+  const edges = new Set(atoms.map((a) => edgeTuple(termKey(a.subject), a.predicate, termKey(a.object))));
   let currentKey = parsed.rootKey;
   for (const step of parsed.steps) {
-    const key = `${currentKey}|${step.kind}|${step.nodeKey}`;
+    const key = edgeTuple(currentKey, step.kind, step.nodeKey);
     if (!edges.has(key)) return { ok: false, reason: `no ${step.kind} edge from ${currentKey} to ${step.nodeKey}` };
     currentKey = step.nodeKey;
   }
