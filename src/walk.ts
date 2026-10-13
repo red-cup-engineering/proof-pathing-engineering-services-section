@@ -17,6 +17,22 @@ export interface WalkResult {
 export function walk(atoms: readonly Atom[], path: string): WalkResult {
   const parsed = parsePath(path);
   if (!parsed) return { ok: false, reason: "malformed or noncanonical proof path" };
+  // V1 term keys give bare strings and serialized non-strings the same spelling
+  // in some cases (for example, a JSON-looking string and a compound cell).
+  // Reject such ambiguous graph presentations rather than silently joining nodes.
+  const termKinds = new Map<string, "literal" | "structured">();
+  for (const atom of atoms) {
+    for (const term of [atom.subject, atom.object]) {
+      const key = termKey(term);
+      if (typeof key !== "string") return { ok: false, reason: "nonserializable generator term" };
+      const kind = typeof term === "string" ? "literal" : "structured";
+      const previous = termKinds.get(key);
+      if (previous !== undefined && previous !== kind) {
+        return { ok: false, reason: "ambiguous structured/literal term identity" };
+      }
+      termKinds.set(key, kind);
+    }
+  }
   // Length-delimited tuple encoding avoids delimiter-injection aliasing.
   const keyOf = (source: string, kind: Generator, target: string): string =>
     JSON.stringify([source, kind, target]);
