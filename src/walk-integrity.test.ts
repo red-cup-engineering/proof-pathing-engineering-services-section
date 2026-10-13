@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { walk } from "./walk.ts";
 import { parsePath } from "./path.ts";
-import { sanitizeSegment } from "./term.ts";
+import { sanitizeSegment, termKey } from "./term.ts";
 import { structureOf } from "./category.ts";
 
 test("an authentic specialization path replays against original generator atoms", () => {
@@ -23,6 +23,16 @@ test("a delimiter injection cannot impersonate a different generator edge", () =
   const authentic = `${sanitizeSegment("root|converse|middle")}/converse/library/end`;
   assert.equal(walk(atoms, injected).ok, false);
   assert.equal(walk(atoms, authentic).ok, true);
+});
+
+test("receiver rejects a string alias of a structured term at the V1 key boundary", () => {
+  const cell = { subject: "a", predicate: "rel", object: "b" };
+  const alias = termKey(cell);
+  const single = [{ subject: cell, predicate: "converse" as const, object: "target" }];
+  const route = `${sanitizeSegment(alias)}/converse/library/target`;
+  assert.equal(walk(single, route).ok, true, "unambiguous structured terms still replay");
+  const ambiguous = [...single, { subject: alias, predicate: "converse" as const, object: "different" }];
+  assert.equal(walk(ambiguous, route).ok, false, "the collision cannot silently merge nodes");
 });
 
 test("different byte spellings of the same path cannot pass the receiver", () => {
