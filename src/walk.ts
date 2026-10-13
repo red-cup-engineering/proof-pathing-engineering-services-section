@@ -33,7 +33,7 @@ export function walk(atoms: readonly Atom[], path: string): WalkResult {
       termKinds.set(key, kind);
     }
   }
-  // Length-delimited tuple encoding avoids delimiter-injection aliasing.
+  // Unambiguous JSON tuple encoding avoids delimiter-injection aliasing.
   const keyOf = (source: string, kind: Generator, target: string): string =>
     JSON.stringify([source, kind, target]);
   const edges = new Set(atoms.map((a) => keyOf(termKey(a.subject), a.predicate, termKey(a.object))));
