@@ -198,6 +198,9 @@ class AdmissionError extends TypeError {
 }
 
 const generatorRank = new Map<string, number>(GENERATORS.map((value, index) => [value, index]));
+// Canonical coordinates must not depend on the process's ICU locale.
+const compareCanonicalKeys = (left: string, right: string): number =>
+  left < right ? -1 : left > right ? 1 : 0;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder("utf-8", { fatal: true });
 const SAFE_BYTE = /^[A-Za-z0-9._-]$/u;
@@ -324,7 +327,7 @@ export function normalizeWitnesses(values: readonly GeneratorWitness[]): readonl
     const witness = Object.freeze({ domain: value.domain, generator: value.generator, codomain: value.codomain });
     found.set(witnessKey(witness), witness);
   }
-  return Object.freeze([...found.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, witness]) => witness));
+  return Object.freeze([...found.entries()].sort(([left], [right]) => compareCanonicalKeys(left, right)).map(([, witness]) => witness));
 }
 
 function resourceTypeOf(value: unknown): string {
@@ -439,7 +442,7 @@ export function envelopeProofCoordinate(coordinate: ProofCoordinate, witnesses: 
       throw new TypeError("a cryptographic witness requires type, algorithm, and value");
     }
     return Object.freeze({ type: witness.type, algorithm: witness.algorithm, value: witness.value });
-  }).sort((left, right) => canonicalJson(left).localeCompare(canonicalJson(right)));
+  }).sort((left, right) => compareCanonicalKeys(canonicalJson(left), canonicalJson(right)));
   return Object.freeze({ type: "rmn-proof-envelope", coordinate, witnesses: Object.freeze(normalized) });
 }
 
@@ -664,7 +667,7 @@ export function catalogProofPaths<A extends AddressableTerm>(
   }
   return Object.freeze({
     type: "proof-path-catalog",
-    entries: Object.freeze([...entries.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, entry]) => entry)),
+    entries: Object.freeze([...entries.entries()].sort(([left], [right]) => compareCanonicalKeys(left, right)).map(([, entry]) => entry)),
     refusals: Object.freeze(refusals),
   });
 }
@@ -707,7 +710,7 @@ export function chartProofPathCatalog(catalog: ProofPathCatalog): ProofPathChart
   }
   return Object.freeze({
     type: "proof-path-chart",
-    nodes: Object.freeze([...nodes.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, node]) => node)),
-    edges: Object.freeze([...edges.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, edge]) => edge)),
+    nodes: Object.freeze([...nodes.entries()].sort(([left], [right]) => compareCanonicalKeys(left, right)).map(([, node]) => node)),
+    edges: Object.freeze([...edges.entries()].sort(([left], [right]) => compareCanonicalKeys(left, right)).map(([, edge]) => edge)),
   });
 }
