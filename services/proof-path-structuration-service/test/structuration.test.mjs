@@ -330,3 +330,38 @@ test("PPA-C009: NUL-bearing term keys cannot forge or deduplicate generator edge
   assert.deepEqual(admitted.coordinate, reversed.coordinate);
   assert.equal(checkProofPathAst(proofPathOfCoordinate(admitted.coordinate), [forgery]), true);
 });
+
+
+test("PPA-C010: canonical witness and envelope order never depends on locale collation", () => {
+  const witness = (domain, codomain = "target") =>
+    ({ domain, generator: "specialization", codomain });
+  const inputs = [witness("ä"), witness("z")];
+  // ICU English collation places ä near a; UTF-16 lexical ordering
+  // places z before ä. Canonical identity must not consult host locale.
+  const normal = normalizeWitnesses(inputs);
+  assert.deepEqual(normal.map(w => w.domain), ["z", "ä"]);
+  assert.deepEqual(normalizeWitnesses([...inputs].reverse()), normal);
+
+  const requests = ["ä", "z"].map(atom => ({
+    atom, root: "root",
+    witnesses: [witness("root", atom)],
+  }));
+  const catalog = catalogProofPaths(requests);
+  const reverse = catalogProofPaths([...requests].reverse());
+  assert.deepEqual(catalog, reverse);
+  assert.deepEqual(catalog.entries.map(e => e.atom), ["z", "ä"]);
+  assert.deepEqual(chartProofPathCatalog(catalog), chartProofPathCatalog(reverse));
+
+  const settled = settleProofCoordinate({
+    resourceType: "claim", root: "root", target: "target",
+    witnesses: [witness("root", "target")],
+  });
+  assert.equal(settled.ok, true);
+  const evidence = [ "ä", "z" ].map(algorithm => ({
+    type: "commitment", algorithm, value: "receipt",
+  }));
+  const envelope = envelopeProofCoordinate(settled.coordinate, evidence);
+  const reordered = envelopeProofCoordinate(settled.coordinate, [...evidence].reverse());
+  assert.deepEqual(envelope, reordered);
+  assert.deepEqual(envelope.witnesses.map(w => w.algorithm), ["z", "ä"]);
+});
