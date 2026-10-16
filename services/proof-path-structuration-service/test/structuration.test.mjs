@@ -17,6 +17,7 @@ import {
   proofPathOfCoordinate,
   renderProofPathAst,
   routeOf,
+  normalizeWitnesses,
   sanitizeSegment,
   settleProofCoordinate,
   structureSemioticAtom,
@@ -283,4 +284,49 @@ test("PPA-LSPACE-001: source revisions and token occurrences cannot alias", () =
   );
   // Even supplied structural generator evidence does not authenticate the actor
   // or independently receive a corporate act: this is only a coordinate fold.
+});
+
+
+test("PPA-C009: NUL-bearing term keys cannot forge or deduplicate generator edges", () => {
+  const delimiter = "\u000000\u0000";
+  const witnessed = {
+    domain: "a" + delimiter + "s:b",
+    generator: "specialization",
+    codomain: "c",
+  };
+  const forgery = {
+    domain: "a",
+    generator: "specialization",
+    codomain: "b" + delimiter + "s:c",
+  };
+  assert.notEqual(termKey(witnessed.domain), termKey(forgery.domain));
+  assert.notEqual(termKey(witnessed.codomain), termKey(forgery.codomain));
+
+  // A raw NUL-delimited triple would collide here. The source of truth must
+  // use injective tuples for BOTH deduplication and independent path replay.
+  assert.equal(normalizeWitnesses([witnessed, forgery]).length, 2);
+  const forgedPath = astOfRoute({
+    root: forgery.domain,
+    steps: [{ generator: forgery.generator, node: forgery.codomain }],
+  });
+  assert.equal(checkProofPathAst(forgedPath, [witnessed]), false,
+    "one witnessed edge must never license a different edge");
+  assert.equal(checkProofPathAst(forgedPath, [forgery]), true);
+  const denied = settleProofCoordinate({
+    resourceType: "claim",
+    root: forgery.domain, target: forgery.codomain, witnesses: [witnessed],
+  });
+  assert.deepEqual(denied, { ok: false, reason: "unearned-coordinate" });
+  const admitted = settleProofCoordinate({
+    resourceType: "claim",
+    root: forgery.domain, target: forgery.codomain, witnesses: [witnessed, forgery],
+  });
+  const reversed = settleProofCoordinate({
+    resourceType: "claim",
+    root: forgery.domain, target: forgery.codomain, witnesses: [forgery, witnessed],
+  });
+  assert.equal(admitted.ok, true);
+  assert.equal(reversed.ok, true);
+  assert.deepEqual(admitted.coordinate, reversed.coordinate);
+  assert.equal(checkProofPathAst(proofPathOfCoordinate(admitted.coordinate), [forgery]), true);
 });
