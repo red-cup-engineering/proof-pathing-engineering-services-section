@@ -299,8 +299,16 @@ function isGenerator(value: unknown): value is Generator {
   return typeof value === "string" && generatorRank.has(value);
 }
 
+/** Injective witness identity over the typed term-key coordinates.
+ * Term keys can contain NUL. A delimiter join would let a witness for
+ * domain "a\\0xx\\0s:b" masquerade as an edge out of "a" to a longer
+ * codomain. Tuple encoding keeps all three coordinates independent. */
+function witnessKeyOfKeys(domainKey: string, generator: Generator, codomainKey: string): string {
+  return JSON.stringify([domainKey, generatorRank.get(generator), codomainKey]);
+}
+
 function witnessKey(witness: GeneratorWitness): string {
-  return `${termKey(witness.domain)}\u0000${String(generatorRank.get(witness.generator)).padStart(2, "0")}\u0000${termKey(witness.codomain)}`;
+  return witnessKeyOfKeys(termKey(witness.domain), witness.generator, termKey(witness.codomain));
 }
 
 /** Validate, sort, and structurally deduplicate direct generator evidence. */
@@ -590,7 +598,7 @@ export function checkProofPathAst(ast: PosixFilepathAst, witnesses: readonly Gen
     for (const step of ast.steps) {
       if (!step || step.type !== "proof-step" || !isGenerator(step.generator) || step.namespace !== "library" || !step.node) return false;
       if (step.node.type !== "term-segment" || step.node.role !== "codomain" || !isCanonicalTermKey(step.node.key) || sanitizeSegment(step.node.key) !== step.node.segment) return false;
-      const edge = `${domainKey}\u0000${String(generatorRank.get(step.generator)).padStart(2, "0")}\u0000${step.node.key}`;
+      const edge = witnessKeyOfKeys(domainKey, step.generator, step.node.key);
       if (!edges.has(edge)) return false;
       domainKey = step.node.key;
     }
