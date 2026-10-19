@@ -1,0 +1,4 @@
+[submodule "proof-path-structuration-service"]
+	path = services/proof-path-structuration-service
+	url = https://github.com/red-cup-engineering/proof-path-structuration-service.git
+	branch = main
