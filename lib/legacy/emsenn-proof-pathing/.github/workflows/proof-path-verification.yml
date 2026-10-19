@@ -1,0 +1,31 @@
+name: Independent proof-path witness verification
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - ".github/workflows/proof-path-verification.yml"
+  pull_request:
+    paths:
+      - "src/**"
+      - ".github/workflows/proof-path-verification.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  witness-receiver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out original source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install Node with native TypeScript stripping
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.18.0"
+      - name: Replay authentic and adversarial witnesses without runtime dependencies
+        run: node --test src/walk-integrity.test.ts
