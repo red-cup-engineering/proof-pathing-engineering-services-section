@@ -26,5 +26,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/red-cup-engineering/proof-pathing-services-section.git"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
   }
 }
