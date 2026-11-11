@@ -31,9 +31,9 @@ typed `unearned-path` refusal when no route exists. An atom alone is not a
 proof and therefore cannot earn a path.
 
 The section-level identity adapter translates an earned coordinate into a closed
-RMN term and submits it to the sole normalized semantic-content v2 envelope. The
+RMN term and submits it to the sole normalized semantic-content v3 envelope. The
 envelope explicitly commits the `proof-path-addressing.settled-coordinate`
-object kind, the RMN 0.0.1 normalization profile, identity settlement, and the
+object kind, the SEN 0.1.0 normalization profile, identity settlement, and the
 shared empty-witness root before deterministic CBOR and NI naming. The returned
 opaque `token` commits to that envelope; the settled body remains the visible
 coordinate material. No raw-term identity is an alternate identity law. The
@@ -58,3 +58,7 @@ The principal source carriers are the settled proof-pathing explanations dated
 2026-06-19, the PPA campaign plan dated 2026-07-09, and the proof-pathing asset
 inventory dated 2026-07-26. Provider-generated NotebookLM synthesis is an
 advisory reading of those sources and does not override them.
+
+Run `npm ci` and `npm run verify` to check the identity adapter. The
+structuration submodule has its own suite and is installed at the exact Git
+revision named in this package’s dependencies.
