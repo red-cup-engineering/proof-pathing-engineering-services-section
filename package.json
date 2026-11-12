@@ -18,6 +18,7 @@
     "verify": "npm run check && npm test"
   },
   "dependencies": {
+    "@red-cup-engineering/computer-code-engine": "^0.1.0",
     "@red-cup-engineering/computer-data-engineering-services-section": "0.7.2-dev.1405",
     "@red-cup-engineering/proof-path-structuration-service": "git+https://github.com/red-cup-engineering/proof-path-structuration-service.git#1bbbedaad393db99ed9efd353654707c725d19e2"
   },
