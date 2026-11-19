@@ -1,0 +1,34 @@
+{
+  "name": "@red-cup-engineering/proof-pathing-engineering-services-section",
+  "version": "0.1.2",
+  "private": true,
+  "type": "module",
+  "description": "Owns canonical file-leg admission, normalization, and readout for Proof-Path Addressing.",
+  "exports": {
+    ".": "./lib/identity.mjs",
+    "./identity": "./lib/identity.mjs"
+  },
+  "files": [
+    "lib/identity.mjs"
+  ],
+  "scripts": {
+    "check": "node --check lib/identity.mjs",
+    "verify": "npm run check"
+  },
+  "dependencies": {
+    "@red-cup-engineering/computer-code-engine": "^0.1.0",
+    "@red-cup-engineering/proof-path-structuration-service": "git+https://github.com/red-cup-engineering/proof-path-structuration-service.git#1bbbedaad393db99ed9efd353654707c725d19e2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/proof-pathing-engineering-services-section.git"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
+  },
+  "bundleDependencies": [
+    "@red-cup-engineering/proof-path-structuration-service"
+  ]
+}
